@@ -8,4 +8,4 @@ WORKDIR /src
 RUN npm install
 EXPOSE 3000
 
-CMD ["node", "/src/echo_chamber.js"]
+CMD ["node", "/src/tin_can.js"]
