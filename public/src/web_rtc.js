@@ -96,7 +96,10 @@ window.TinCan.caller = (function (socket, peerConnection) {
       var sessionDescription = new SessionDescription(offer);
       setLocalDescription(sessionDescription);
       sendDescriptionToResponder(sessionDescription);
-    }, noop);
+    }, noop, {
+      offerToReceiveAudio: 1,
+      offerToReceiveVideo: 1
+    });
   }
 
   function acceptAnswer(answer) {
@@ -129,7 +132,6 @@ window.TinCan.responder = (function (socket, peerConnection) {
       console.log("Offer accepted");
       peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
       sendAnswer(offerDescription);
-
     } else {
       console.log("Offer declined");
     }
@@ -140,8 +142,7 @@ window.TinCan.responder = (function (socket, peerConnection) {
   }
 
   function sendAnswerToCaller(description) {
-    var payload = JSON.stringify({sessionDescription: description});
-    send(socket, "new answer", payload);
+    send(socket, "new answer", {sessionDescription: description});
   }
 
   function sendAnswer() {
