@@ -195,6 +195,7 @@ function onLoad() {
   TinCan.responder.enable();
 
   document.querySelector(".call").addEventListener("click", function (event) {
+    event.preventDefault();
     TinCan.caller.sendOffer();
   });
 };

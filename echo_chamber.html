@@ -32,7 +32,6 @@
       var messageElement = document.getElementById('m');
       socket.emit('chat message', messageElement.value);
       messageElement.value = '';
-      return false;
     });
 
     socket.on("chat message", function (message) {

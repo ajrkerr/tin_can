@@ -23,6 +23,9 @@ form input {
     margin-right: .5%;
 }
 
+form button:hover, form submit:hover {
+    cursor: pointer;
+}
 form button, form submit {
     width: 9%;
     background: rgb(130, 224, 255);
