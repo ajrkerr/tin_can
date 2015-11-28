@@ -2,7 +2,7 @@
   "name": "echo_chamber",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "echo_chamber.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
