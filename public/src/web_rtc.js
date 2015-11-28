@@ -19,7 +19,21 @@ var SessionDescription =
   window.msRTCSessionDescription;
 
 
-var stunServer = "stun:159.203.29.172:3478";
+var socket = io();
+
+var send = function (socket, event_type, message) {
+  var payload = JSON.stringify(message);
+  console.log("Sending::", event_type, '::', payload);
+  socket.emit(event_type, payload);
+};
+
+var listenFor = function (socket, event_type, callback) {
+  socket.on(event_type, function (event) {
+    var message = JSON.parse(event);
+    console.log("Received::", event_type, "::", message);
+    callback(message);
+  });
+};
 
 function addNewVideoElement(container, mediaStream) {
   var videoElement = document.createElement("video");
@@ -33,37 +47,135 @@ function addNewVideoElement(container, mediaStream) {
   videoElement.controls = true;
 }
 
-function createPeerOffer(peerConnection) {
-  peerConnection.createOffer(function (offer) {
-    var sessionDescription = new SessionDescription(offer);
+function buildPeerConnection(socket, config) {
+  var peerConnection = new PeerConnection(config);
 
-    peerConnection.setLocalDescription(sessionDescription, function () {
-      console.log("Creating Session Description");
-      console.log(JSON.stringify({sdp: sessionDescription}));
-    }, console.log);
+  peerConnection.onicecandidate = function (event) {
+    if(event.candidate) {
+      send(socket, "new ice candidate", { candidate: event.candidate });
+    }
+  };
 
-  }, console.log);
-}
-
-function onLoad() {
-  var peerConfig = { "iceServers": [{ "url": stunServer }]};
-  var peerConnection = new PeerConnection(peerConfig);
+  listenFor(socket, "new ice candidate", function (message) {
+    var candidate = message.candidate;
+    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  });
 
   peerConnection.onaddstream = function (mediaObject) {
+    console.log("Adding a new media stream");
     var container = document.querySelector(".cameras");
     addNewVideoElement(container, mediaObject.stream);
   };
 
-  var mediaCallbacks = {
-    success: function (mediaStream) {
-      peerConnection.onaddstream({stream: mediaStream});
-      peerConnection.addStream(mediaStream);
-      createPeerOffer(peerConnection);
-    },
+  return peerConnection;
+}
 
-    failure: function () {
-      alert("Couldn't get the camera going. Blah.")
+var peerConfig = { "iceServers": [{ "url": "stun:159.203.29.172:3478" }]};
+var peerConnection = buildPeerConnection(socket, peerConfig);
+
+var noop = function () {
+  console.trace();
+  console.log(arguments);
+};
+
+window.TinCan = {};
+
+window.TinCan.caller = (function (socket, peerConnection) {
+  function setLocalDescription(description) {
+    peerConnection.setLocalDescription(description, noop, noop);
+  }
+
+  function sendDescriptionToResponder(description) {
+    send(socket, "new offer", {sessionDescription: description});
+  }
+
+  function sendOffer() {
+    disable();
+    enable();
+    peerConnection.createOffer(function (offer) {
+      var sessionDescription = new SessionDescription(offer);
+      setLocalDescription(sessionDescription);
+      sendDescriptionToResponder(sessionDescription);
+    }, noop);
+  }
+
+  function acceptAnswer(answer) {
+    var answerDescription = answer.sessionDescription;
+    peerConnection.setRemoteDescription(new RTCSessionDescription(answerDescription));
+  }
+
+  function enable() {
+    listenFor(socket, "new answer", acceptAnswer);
+  }
+
+  function disable() {
+    socket.removeAllListeners("new answer");
+  }
+
+  return {
+    sendOffer: sendOffer,
+    enable: enable,
+    disbale: disable
+  };
+})(socket, peerConnection);
+
+
+window.TinCan.responder = (function (socket, peerConnection) {
+  function processOffer(offer) {
+    var offerDescription = offer.sessionDescription;
+
+    console.log("Received Offer:", offerDescription);
+    if(confirm("Do you wish to accept this offer?")) {
+      console.log("Offer accepted");
+      peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
+      sendAnswer(offerDescription);
+
+    } else {
+      console.log("Offer declined");
     }
+  }
+
+  function setLocalDescription(description) {
+    peerConnection.setLocalDescription(description, noop, noop);
+  }
+
+  function sendAnswerToCaller(description) {
+    var payload = JSON.stringify({sessionDescription: description});
+    send(socket, "new answer", payload);
+  }
+
+  function sendAnswer() {
+    peerConnection.createAnswer(function (answerDescription) {
+      setLocalDescription(answerDescription);
+      sendAnswerToCaller(answerDescription);
+    }, noop);
+  }
+
+
+  function enable() {
+    listenFor(socket, "new offer", processOffer);
+  }
+
+  function disable() {
+    socket.removeAllListeners("new offer");
+  }
+
+  return {
+    enable: enable,
+    disbale: disable
+  };
+})(socket, peerConnection);
+
+
+
+function onLoad() {
+  var success = function (mediaStream) {
+    peerConnection.onaddstream({stream: mediaStream});
+    peerConnection.addStream(mediaStream);
+  };
+
+  var failure = function () {
+    console.log("Couldn't get the camera going. Blah.");
   };
 
   var constraints = {
@@ -71,55 +183,7 @@ function onLoad() {
     video: true
   };
 
-  navigator.getUserMedia(constraints, mediaCallbacks.success, mediaCallbacks.failure);
-
-  //
-  //
-  //var signalingChannel = createSignalingChannel();
-  //var pc;
-  //var configuration = ...;
-  //
-  //// run start(true) to initiate a call
-  //function start(isCaller) {
-  //  pc = new RTCPeerConnection(configuration);
-  //
-  //  // send any ice candidates to the other peer
-  //  pc.onicecandidate = function (evt) {
-  //    signalingChannel.send(JSON.stringify({ "candidate": evt.candidate }));
-  //  };
-  //
-  //  // once remote stream arrives, show it in the remote video element
-  //  pc.onaddstream = function (evt) {
-  //    remoteView.src = URL.createObjectURL(evt.stream);
-  //  };
-  //
-  //  // get the local stream, show it in the local video element and send it
-  //  navigator.getUserMedia({ "audio": true, "video": true }, function (stream) {
-  //    selfView.src = URL.createObjectURL(stream);
-  //    pc.addStream(stream);
-  //
-  //    if (isCaller)
-  //      pc.createOffer(gotDescription);
-  //    else
-  //      pc.createAnswer(pc.remoteDescription, gotDescription);
-  //
-  //    function gotDescription(desc) {
-  //      pc.setLocalDescription(desc);
-  //      signalingChannel.send(JSON.stringify({ "sdp": desc }));
-  //    }
-  //  });
-  //}
-  //
-  //signalingChannel.onmessage = function (evt) {
-  //  if (!pc)
-  //    start(false);
-  //
-  //  var signal = JSON.parse(evt.data);
-  //  if (signal.sdp)
-  //    pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-  //  else
-  //    pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
-  //};
+  navigator.getUserMedia(constraints, success, failure);
 };
 
 window.onload = onLoad;
