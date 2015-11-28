@@ -104,7 +104,7 @@ window.TinCan.caller = (function (socket, peerConnection) {
 
   function acceptAnswer(answer) {
     var answerDescription = answer.sessionDescription;
-    peerConnection.setRemoteDescription(new RTCSessionDescription(answerDescription));
+    peerConnection.setRemoteDescription(new SessionDescription(answerDescription));
   }
 
   function enable() {
@@ -130,7 +130,7 @@ window.TinCan.responder = (function (socket, peerConnection) {
     console.log("Received Offer:", offerDescription);
     if(confirm("Do you wish to accept this offer?")) {
       console.log("Offer accepted");
-      peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
+      peerConnection.setRemoteDescription(new SessionDescription(offerDescription));
       sendAnswer(offerDescription);
     } else {
       console.log("Offer declined");
