@@ -76,7 +76,7 @@ function buildPeerConnection(socket, config) {
   return peerConnection;
 }
 
-var peerConfig = { "iceServers": [{ "url": "stun:159.203.29.172:3478" }]};
+var peerConfig = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }]};
 var peerConnection = buildPeerConnection(socket, peerConfig);
 
 var noop = function () {
