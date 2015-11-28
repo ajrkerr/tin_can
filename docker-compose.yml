@@ -2,3 +2,8 @@ web:
   build: .
   ports:
     - "3000:3000"
+
+turn:
+  image: 'bprodoehl/turnserver'
+  ports:
+    - "3478:3478"

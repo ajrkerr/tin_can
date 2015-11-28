@@ -19,6 +19,8 @@ var SessionDescription =
   window.msRTCSessionDescription;
 
 
+var stunServer = "stun:192.168.99.100:3478";
+
 function addNewVideoElement(container, mediaStream) {
   var videoElement = document.createElement("video");
   videoElement.setAttribute("class", "webcam");
@@ -32,11 +34,12 @@ function addNewVideoElement(container, mediaStream) {
 }
 
 function onLoad() {
-  var peerConnection = new PeerConnection({
-    "iceServers": [{
-      "url": "stun:stun.l.google.com:19302"
-    }]
-  });
+  var peerConfig = {
+    "iceServers": [{ "url": stunServer }]
+  };
+  var peerConnection = new PeerConnection(peerConfig);
+
+  console.log(peerConfig);
 
 
   peerConnection.onaddstream = function (mediaObject) {
@@ -49,7 +52,7 @@ function onLoad() {
       peerConnection.onaddstream({stream: mediaStream});
       peerConnection.addStream(mediaStream);
 
-      //peerConnection.onicecandidate = function () { console.log(arguments[0].candidate.candidate); };
+      peerConnection.onicecandidate = function () { console.log(arguments[0].candidate.candidate); };
 
       peerConnection.createOffer(function (offer) {
         var sessionDescription = new SessionDescription(offer);
