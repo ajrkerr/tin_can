@@ -18,6 +18,12 @@ var SessionDescription =
   window.webkitRTCSessionDescription ||
   window.msRTCSessionDescription;
 
+var IceCandidate =
+  window.RTCIceCandidate ||
+  window.mozRTCIceCandidate ||
+  window.webkitRTCIceCandidate ||
+  window.msRTCIceCandidate;
+
 
 var socket = io();
 
@@ -58,7 +64,7 @@ function buildPeerConnection(socket, config) {
 
   listenFor(socket, "new ice candidate", function (message) {
     var candidate = message.candidate;
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    peerConnection.addIceCandidate(new IceCandidate(candidate));
   });
 
   peerConnection.onaddstream = function (mediaObject) {
