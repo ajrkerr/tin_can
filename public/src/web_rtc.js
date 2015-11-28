@@ -19,7 +19,7 @@ var SessionDescription =
   window.msRTCSessionDescription;
 
 
-var stunServer = "stun:192.168.99.100:3478";
+var stunServer = "stun:159.203.29.172:3478";
 
 function addNewVideoElement(container, mediaStream) {
   var videoElement = document.createElement("video");
@@ -33,14 +33,21 @@ function addNewVideoElement(container, mediaStream) {
   videoElement.controls = true;
 }
 
+function createPeerOffer(peerConnection) {
+  peerConnection.createOffer(function (offer) {
+    var sessionDescription = new SessionDescription(offer);
+
+    peerConnection.setLocalDescription(sessionDescription, function () {
+      console.log("Creating Session Description");
+      console.log(JSON.stringify({sdp: sessionDescription}));
+    }, console.log);
+
+  }, console.log);
+}
+
 function onLoad() {
-  var peerConfig = {
-    "iceServers": [{ "url": stunServer }]
-  };
+  var peerConfig = { "iceServers": [{ "url": stunServer }]};
   var peerConnection = new PeerConnection(peerConfig);
-
-  console.log(peerConfig);
-
 
   peerConnection.onaddstream = function (mediaObject) {
     var container = document.querySelector(".cameras");
@@ -51,18 +58,7 @@ function onLoad() {
     success: function (mediaStream) {
       peerConnection.onaddstream({stream: mediaStream});
       peerConnection.addStream(mediaStream);
-
-      peerConnection.onicecandidate = function () { console.log(arguments[0].candidate.candidate); };
-
-      peerConnection.createOffer(function (offer) {
-        var sessionDescription = new SessionDescription(offer);
-
-        peerConnection.setLocalDescription(sessionDescription, function () {
-          // send the offer to a server to be forwarded to the friend you're calling.
-        }, console.log);
-        console.log(sessionDescription);
-        //signalingChannel.send(JSON.stringify({ sdp: sessionDescription }));
-      }, console.log);
+      createPeerOffer(peerConnection);
     },
 
     failure: function () {
