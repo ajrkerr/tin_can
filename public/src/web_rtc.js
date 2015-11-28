@@ -185,6 +185,12 @@ function onLoad() {
   };
 
   navigator.getUserMedia(constraints, success, failure);
+
+  TinCan.responder.enable();
+
+  document.querySelector(".call").addEventListener("click", function (event) {
+    TinCan.caller.sendOffer();
+  });
 };
 
 window.onload = onLoad;
