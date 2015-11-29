@@ -22,9 +22,19 @@ export default Reflux.createStore({
       var chatMessage = JSON.parse(payload);
       actions.receiveChatMessage(chatMessage);
     });
+
+    this.socket.on('user connected', function (username) {
+      actions.userConnected(username);
+    });
+
+    this.socket.on('user disconnected', function (username) {
+      actions.userDisconnected(username);
+    });
   },
   updateUsername(data) {
-    this.data = this.data.set('username', data.get('username'));
+    var username = data.get('username');
+    this.data = this.data.set('username', username);
+    this.socket.emit('connect user', username)
   },
   onSendChatMessage(chatMessage) {
     var payload = JSON.stringify({

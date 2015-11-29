@@ -5,5 +5,8 @@ export default Reflux.createActions([
   'sendChatMessage',
   'receiveChatMessage',
   'enableLocalVideo',
-  'setupLocalVideoStream'
+  'setupLocalVideoStream',
+  'userConnected',
+  'userDisconnected',
+  'callUser'
 ]);
