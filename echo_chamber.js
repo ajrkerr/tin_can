@@ -3,12 +3,6 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.use(express.static('public'));
-
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/echo_chamber.html');
-});
-
 function echoBroadcast(io, socket, event, sendToBroadcaster) {
   console.log("Binding: ", event);
 
@@ -20,7 +14,6 @@ function echoBroadcast(io, socket, event, sendToBroadcaster) {
     } else {
       socket.broadcast.emit(event, message);
     }
-
   });
 }
 
@@ -33,7 +26,7 @@ io.on('connection', function(socket){
   echoBroadcast(io, socket, "new ice candidate");
 });
 
-http.listen(3000, function(){
-  console.log('listening on *:3000');
+http.listen(3030, function(){
+  console.log('listening on *:3030');
 });
 
