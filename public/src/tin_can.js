@@ -1,9 +1,6 @@
 function onLoad() {
-  getUsername().then(function (response) {
-    startWebRTC(response);
-  }, function (error) {
-    console.error(error);
-  });
+  var username = getUsername();
+  startWebRTC(username);
 };
 
 function startWebRTC(username) {
@@ -11,8 +8,6 @@ function startWebRTC(username) {
   var success = function (mediaStream) {
     peerConnection.onaddstream({stream: mediaStream});
     peerConnection.addStream(mediaStream);
-    peerConnection.peerIdentity.name = username;
-    console.log("Logged in as:", peerConnection.peerIdentity.name);
   };
 
   // getUserMedia failure callback
@@ -29,6 +24,8 @@ function startWebRTC(username) {
   // Try to access user media devices
   navigator.getUserMedia(constraints, success, failure);
 
+  window.TinCan.caller = new Caller(socket, peerConnection, username);
+
   // Listen for incoming connections
   TinCan.responder.enable();
 
@@ -41,14 +38,24 @@ function startWebRTC(username) {
 
 // Gets the user's name and returns it as a promise
 function getUsername() {
-  return new Promise(function (resolve, reject) {
-    var username = window.prompt("What's your name?", "");
-    if ("" === username || !username) {
-      reject(Error("No username was entered"));
-    } else {
-      resolve(username);
-    }
-  });
+  var username = prompt("What is your name?", "");
+
+  while(username === "" || !username) {
+    username = prompt("You have not entered a username, please provide one.", "");
+  }
+
+  return username;
+
+
+  //return new Promise(function (resolve, reject) {
+  //  var username = window.prompt("What's your name?", "");
+  //
+  //  if ("" === username || !username) {
+  //    reject(Error("No username was entered"));
+  //  } else {
+  //    resolve(username);
+  //  }
+  //});
 }
 
 // Load tin_can!

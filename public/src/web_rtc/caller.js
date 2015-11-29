@@ -1,41 +1,53 @@
-window.TinCan.caller = (function (socket, peerConnection) {
-  function setLocalDescription(description) {
-    peerConnection.setLocalDescription(description, noop, noop);
-  }
+function Caller(socket, peerConnection, fromName) {
+  this.socket = socket;
+  this.peerConnection = peerConnection;
+  this.fromName = fromName;
+}
 
-  function sendDescriptionToResponder(description) {
-    send(socket, "new offer", {sessionDescription: description});
-  }
+Object.assign(Caller.prototype, {
+  enable: function() {
+    listenFor(this.socket, "new answer", this._acceptAnswer);
+  },
 
-  function sendOffer() {
-    disable();
-    enable();
-    peerConnection.createOffer(function (offer) {
-      var sessionDescription = new SessionDescription(offer);
-      setLocalDescription(sessionDescription);
-      sendDescriptionToResponder(sessionDescription);
-    }, noop, {
+  disable: function() {
+    this.socket.removeAllListeners("new answer");
+  },
+
+  sendOffer: function() {
+    this.disable();
+    this.enable();
+
+    var offerAttributes = {
       offerToReceiveAudio: 1,
       offerToReceiveVideo: 1
+    };
+
+    var createOffer = new Promise(function (resolve, reject) {
+      this.peerConnection.createOffer(resolve, reject, offerAttributes);
     });
-  }
 
-  function acceptAnswer(answer) {
+    createOffer
+      .then(this._setLocalDescription.bind(this), noop)
+      .then(this._sendDescriptionToResponder.bind(this), noop);
+  },
+
+  _setLocalDescription: function (description) {
+    this.peerConnection.setLocalDescription(description, noop, noop);
+    return description;
+  },
+
+  _sendDescriptionToResponder: function (description) {
+    send(this.socket, "new offer", {
+      sessionDescription: description,
+      fromName: this.fromName
+    });
+    return description;
+  },
+
+  _acceptAnswer: function(answer) {
     var answerDescription = answer.sessionDescription;
-    peerConnection.setRemoteDescription(new SessionDescription(answerDescription));
-  }
+    this.peerConnection.setRemoteDescription(new SessionDescription(answerDescription));
+  },
+});
 
-  function enable() {
-    listenFor(socket, "new answer", acceptAnswer);
-  }
-
-  function disable() {
-    socket.removeAllListeners("new answer");
-  }
-
-  return {
-    sendOffer: sendOffer,
-    enable: enable,
-    disbale: disable
-  };
-})(socket, peerConnection);
+window.TinCan.Caller = Caller;

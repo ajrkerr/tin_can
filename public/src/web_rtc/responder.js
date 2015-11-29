@@ -3,7 +3,8 @@ window.TinCan.responder = (function (socket, peerConnection) {
     var offerDescription = offer.sessionDescription;
 
     console.log("Received Offer:", offerDescription);
-    if(confirm("Do you wish to accept this offer?")) {
+
+    if(confirm("Do you wish to accept a call from " + offer.fromName + "?")) {
       console.log("Offer accepted");
       peerConnection.setRemoteDescription(new SessionDescription(offerDescription));
       sendAnswer(offerDescription);
