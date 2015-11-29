@@ -1,44 +1,55 @@
-window.TinCan.responder = (function (socket, peerConnection) {
-  function processOffer(offer) {
-    var offerDescription = offer.sessionDescription;
+window.TinCan = window.TinCan || {};
 
-    console.log("Received Offer:", offerDescription);
+function Responder(socket, peerConnection) {
+  this.socket = socket;
+  this.peerConnection = peerConnection;
+}
 
-    if(confirm("Do you wish to accept a call from " + offer.fromName + "?")) {
+Object.assign(Responder.prototype, {
+  _processOffer: function (offer) {
+    console.log("Received Offer:", offer);
+
+    if (confirm("Do you wish to accept a call from " + offer.fromName + "?")) {
       console.log("Offer accepted");
-      peerConnection.setRemoteDescription(new SessionDescription(offerDescription));
-      sendAnswer(offerDescription);
+
+      this._setRemoteDescription(offer.sessionDescription);
+
+      new Promise(this._createAnswer.bind(this))
+        .then(this._setLocalDescription.bind(this), noop)
+        .then(this._sendAnswerToCaller.bind(this), noop);
+
     } else {
       console.log("Offer declined");
     }
+  },
+
+  _setRemoteDescription: function (remoteDescription) {
+    this.peerConnection.setRemoteDescription(new SessionDescription(remoteDescription));
+  },
+
+  _createAnswer: function (accept, reject) {
+    this.peerConnection.createAnswer(accept, reject);
+  },
+
+  _setLocalDescription: function (description) {
+    this.peerConnection.setLocalDescription(description, noop, noop);
+    return description;
+  },
+
+  _sendAnswerToCaller: function (description) {
+    send(this.socket, "new answer", {
+      sessionDescription: description
+    });
+    return description;
+  },
+
+  enable: function () {
+    listenFor(this.socket, "new offer", this._processOffer.bind(this));
+  },
+
+  disable: function () {
+    this.socket.removeAllListeners("new offer");
   }
+});
 
-  function setLocalDescription(description) {
-    peerConnection.setLocalDescription(description, noop, noop);
-  }
-
-  function sendAnswerToCaller(description) {
-    send(socket, "new answer", {sessionDescription: description});
-  }
-
-  function sendAnswer() {
-    peerConnection.createAnswer(function (answerDescription) {
-      setLocalDescription(answerDescription);
-      sendAnswerToCaller(answerDescription);
-    }, noop);
-  }
-
-
-  function enable() {
-    listenFor(socket, "new offer", processOffer);
-  }
-
-  function disable() {
-    socket.removeAllListeners("new offer");
-  }
-
-  return {
-    enable: enable,
-    disbale: disable
-  };
-})(socket, peerConnection);
+window.TinCan.Responder = Responder;

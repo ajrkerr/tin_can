@@ -1,62 +1,92 @@
 function onLoad() {
   var username = getUsername();
-  startWebRTC(username);
-};
 
-function startWebRTC(username) {
-  // getUserMedia success callback
-  var success = function (mediaStream) {
+  var socket = io();
+
+  var peerConfig = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }]};
+  var peerConnection = buildPeerConnection(socket, peerConfig);
+
+  startChat(socket, username);
+  startLocalMedia(peerConnection);
+  startWebRTC(socket, peerConnection, username);
+}
+
+function startChat(socket, username) {
+  var form = document.getElementById("message-form");
+  var messagesElement = document.getElementById('messages');
+  var messageInput = document.getElementById('new-message');
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    if(messageInput.value != '') {
+      send(socket, 'chat message', {
+        username: username,
+        message: messageInput.value
+      });
+
+      messageInput.value = '';
+    }
+  });
+
+  listenFor(socket, "chat message", function (payload) {
+    var username = payload.username;
+    var message = payload.message;
+
+    var newElement = document.createElement("li");
+    newElement.textContent = username + ": " + message;
+
+    messagesElement.appendChild(newElement);
+  });
+}
+
+function startLocalMedia(peerConnection) {
+  var addStream = function (mediaStream) {
+    console.log("Adding local stream")
     peerConnection.onaddstream({stream: mediaStream});
     peerConnection.addStream(mediaStream);
+    return mediaStream;
   };
 
-  // getUserMedia failure callback
-  var failure = function () {
-    console.log("Couldn't get the camera going. Blah.");
+  var reportFailure = function () {
+    alert("We could not access your camera.");
+    console.log(arguments);
+    throw "Could not access camera";
   };
 
-  // getUserMedia constraints
-  var constraints = {
+  var mediaConstraints = {
     audio: true,
     video: true
   };
 
-  // Try to access user media devices
-  navigator.getUserMedia(constraints, success, failure);
-
-  window.TinCan.caller = new Caller(socket, peerConnection, username);
-
-  // Listen for incoming connections
-  TinCan.responder.enable();
-
-  // Send out a call when the 'call' button is clicked
-  document.querySelector(".call").addEventListener("click", function (event) {
-    event.preventDefault();
-    TinCan.caller.sendOffer();
+  var promise = new Promise(function (success, failure) {
+    return navigator.getUserMedia(mediaConstraints, success, failure);
   });
+
+  return promise.then(addStream, reportFailure);
 }
 
-// Gets the user's name and returns it as a promise
+function startWebRTC(socket, peerConnection, username) {
+  var caller = new Caller(socket, peerConnection, username);
+  var responder = new Responder(socket, peerConnection);
+
+  responder.enable();
+
+  // Send out a call when the 'call' button is clicked
+  document
+    .querySelector(".call")
+    .addEventListener("click", function (event) {
+      event.preventDefault();
+      caller.sendOffer();
+    });
+}
+
 function getUsername() {
   var username = prompt("What is your name?", "");
-
   while(username === "" || !username) {
     username = prompt("You have not entered a username, please provide one.", "");
   }
-
   return username;
-
-
-  //return new Promise(function (resolve, reject) {
-  //  var username = window.prompt("What's your name?", "");
-  //
-  //  if ("" === username || !username) {
-  //    reject(Error("No username was entered"));
-  //  } else {
-  //    resolve(username);
-  //  }
-  //});
 }
 
-// Load tin_can!
 window.onload = onLoad;

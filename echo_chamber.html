@@ -19,30 +19,13 @@
   <div style="width: 50%">
     <ul id="messages"></ul>
 
-    <form action="">
-      <input id="m" autocomplete="off"/>
-      <submit class="send">Send</submit>
+    <div class="message-input-container">
+      <form id="message-form">
+        <input id="new-message" autocomplete="off"/>
+        <submit class="send">Send</submit>
+      </form>
       <button class="call">Call</button>
-    </form>
+    </div>
   </div>
-
-  <script>
-    var socket = io();
-    var form = document.querySelector("form");
-
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-      var messageElement = document.getElementById('m');
-      socket.emit('chat message', messageElement.value);
-      messageElement.value = '';
-    });
-
-    socket.on("chat message", function (message) {
-      console.log("Recieving Message:", message);
-      var newElement = document.createElement("li");
-      newElement.innerHTML = message;
-      document.querySelector("#messages").appendChild(newElement);
-    });
-  </script>
 </body>
 </html>

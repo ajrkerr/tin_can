@@ -2,11 +2,16 @@ function Caller(socket, peerConnection, fromName) {
   this.socket = socket;
   this.peerConnection = peerConnection;
   this.fromName = fromName;
+
+  this.offerAttributes = {
+    offerToReceiveAudio: 1,
+    offerToReceiveVideo: 1
+  };
 }
 
 Object.assign(Caller.prototype, {
   enable: function() {
-    listenFor(this.socket, "new answer", this._acceptAnswer);
+    listenFor(this.socket, "new answer", this._acceptAnswer.bind(this));
   },
 
   disable: function() {
@@ -17,18 +22,13 @@ Object.assign(Caller.prototype, {
     this.disable();
     this.enable();
 
-    var offerAttributes = {
-      offerToReceiveAudio: 1,
-      offerToReceiveVideo: 1
-    };
-
-    var createOffer = new Promise(function (resolve, reject) {
-      this.peerConnection.createOffer(resolve, reject, offerAttributes);
-    });
-
-    createOffer
+    new Promise(this._createOffer.bind(this))
       .then(this._setLocalDescription.bind(this), noop)
       .then(this._sendDescriptionToResponder.bind(this), noop);
+  },
+
+  _createOffer: function(resolve, reject) {
+    this.peerConnection.createOffer(resolve, reject, this.offerAttributes);
   },
 
   _setLocalDescription: function (description) {
@@ -50,4 +50,5 @@ Object.assign(Caller.prototype, {
   },
 });
 
+window.TinCan = window.TinCan || {};
 window.TinCan.Caller = Caller;
