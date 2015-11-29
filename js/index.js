@@ -54,7 +54,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "d0302ea4642536264790"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "674e2d77c8b31dff7e3f"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -23285,8 +23285,16 @@
 	          username,
 	          '!'
 	        ),
-	        _react2.default.createElement(_chat_input2.default, null),
-	        _react2.default.createElement(_chat_message_list2.default, null)
+	        _react2.default.createElement(
+	          'div',
+	          { 'class': 'row' },
+	          _react2.default.createElement(
+	            'div',
+	            { 'class': 'col-md-4' },
+	            _react2.default.createElement(_chat_input2.default, null),
+	            _react2.default.createElement(_chat_message_list2.default, null)
+	          )
+	        )
 	      );
 	    } else {
 	      pageContents = _react2.default.createElement(_username_form2.default, null);

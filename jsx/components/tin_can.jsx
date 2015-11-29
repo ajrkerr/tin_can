@@ -3,6 +3,8 @@ import Reflux from 'reflux';
 import UsernameForm from './username_form';
 import ChatInput from './chat_input';
 import ChatMessageList from './chat_message_list';
+import LocalVideoStream from './local_video_stream';
+import VideoStreamList from './video_stream_list';
 
 import usernameStore from '../stores/username_store';
 import echoServerAdapter from '../adapters/echo_server_adapter';
@@ -15,8 +17,16 @@ const TinCan = React.createClass({
     if (username) {
       pageContents = <div>
         <h3>Hello {username}!</h3>
-        <ChatInput />
-        <ChatMessageList />
+        <div className="row">
+          <div className="col-sm-6">
+            <LocalVideoStream />
+            <VideoStreamList />
+          </div>
+          <div className="col-sm-6">
+            <ChatInput />
+            <ChatMessageList />
+          </div>
+        </div>
       </div>;
     } else {
       pageContents = <UsernameForm />;

@@ -32,9 +32,9 @@ const UsernameForm = React.createClass({
     }
     return (
       <div className="row">
-        <div className="col-md-4">
+        <div className="col-sm-4">
         </div>
-        <div className="jumbotron col-md-4">
+        <div className="jumbotron col-sm-4">
           <form className="form-inline" onSubmit={this.submitUsername}>
             {alert}
             <div className="input-group">
