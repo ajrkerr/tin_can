@@ -54,7 +54,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "80236506c3c09f0d16aa"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "a15d9aee2310d59739a1"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -14147,24 +14147,37 @@
 
 	var UsernameForm = _react2.default.createClass({
 	  displayName: "UsernameForm",
+	  submitUsername: function submitUsername(evt) {
+	    evt.preventDefault();
+	    console.log(evt);
+	  },
 	  render: function render() {
 	    return _react2.default.createElement(
 	      "div",
-	      { className: "jumbo-tron" },
+	      { className: "row" },
+	      _react2.default.createElement("div", { className: "col-md-4" }),
 	      _react2.default.createElement(
-	        "form",
-	        null,
+	        "div",
+	        { className: "jumbotron col-md-4" },
 	        _react2.default.createElement(
-	          "div",
-	          { className: "input-group" },
+	          "form",
+	          { className: "form-inline", onSubmit: this.submitUsername },
 	          _react2.default.createElement(
-	            "span",
-	            { className: "input-group-addon" },
-	            "Username"
+	            "div",
+	            { className: "input-group" },
+	            _react2.default.createElement(
+	              "span",
+	              { className: "input-group-addon" },
+	              "Username"
+	            ),
+	            _react2.default.createElement("input", { type: "text", className: "form-control" })
 	          ),
-	          _react2.default.createElement("input", { type: "text", className: "form-control" })
-	        ),
-	        _react2.default.createElement("button", { type: "submit", className: "btn btn-success btn-lg" })
+	          _react2.default.createElement(
+	            "button",
+	            { type: "submit", className: "btn btn-success pull-right" },
+	            "Submit"
+	          )
+	        )
 	      )
 	    );
 	  }
