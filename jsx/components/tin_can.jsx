@@ -5,7 +5,9 @@ import UsernameForm from './username_form';
 const TinCan = React.createClass({
   render() {
     return (
-      <UsernameForm />
+      <div className="container-fluid">
+        <UsernameForm />
+      </div>
     )
   }
 });
